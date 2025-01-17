@@ -16,6 +16,9 @@ BLEU, ROUGE, METEOR, BERTScore, F1RadGraph, and F1CheXbert.
 - Support for batch processing
 - Detailed per-sample and aggregated results
 
+## TODO
+- Add SembScore (CheXbert Vector Similarity)
+
 ## Installation
 
 1. Clone the repository:
