@@ -1,0 +1,6 @@
+case_id,ground_truth_report,predicted_report
+1,"Findings: pneumonia in the right lung. The heart size is normal.","Findings: pneumonias in the right lung. The heart is enlarged."
+2,"Impression: mild cardiomegaly is noted. No signs of pneumonia.","Impression: the heart is enlarged. No sign of pneumonias."
+3,"The patient has pneumonia with consolidation in the left upper lobe.","The patient has multiple pneumonias with consolidation in the left upper lobe."
+4,"No cardiomegaly or pneumonia identified.","No enlarged heart but mild pneumonias in the lower lobes."
+5,"Cardiomegaly is present. The lungs are clear without pneumonia.","Heart is enlarged. The lungs are normal without any sign of infection."
