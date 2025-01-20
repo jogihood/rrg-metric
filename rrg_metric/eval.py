@@ -18,10 +18,11 @@ from .config import (
 # args = parser.parse_args()
 
 
-def compute(metric, preds, gts, verbose=False):
+def compute(metric, preds, gts, per_sample=False, verbose=False):
     additional_results = {}
     assert len(preds) == len(gts), "Number of predictions and ground truths should be the same"
     iters = tqdm((zip(preds, gts)), total=len(preds)) if verbose else zip(preds, gts)
+    # TODO: Modify progress bar
 
     if metric in ["bleu", "rouge", "meteor", "bertscore"]:
         if verbose: print(f"Loading '{metric}' computer...")
@@ -32,10 +33,19 @@ def compute(metric, preds, gts, verbose=False):
         if metric == "rouge": k = "rougeL"
         if metric == "bertscore": k = "f1"
 
-        params = { "predictions": preds, "references": gts }
-        if metric == "bertscore": params["lang"] = "en"
-        per_sample_results = [computer.compute(**params)[k] for pred, gt in iters]
-        total_results = np.mean(per_sample_results)
+        params = {} if metric != "bertscore" else {"lang": "en"}
+        if per_sample:
+            per_sample_results = []
+            for pred, gt in iters:
+                params["predictions"] = [pred]
+                params["references"]  = [gt]
+                per_sample_results.append(computer.compute(**params)[k])
+                total_results = np.mean(per_sample_results)
+        else:
+            params["predictions"] = preds
+            params["references"]  = gts
+            per_sample_results = None
+            total_results = computer.compute(**params)[k]
 
     elif metric == "f1radgraph":
         if verbose: print(f"Loading '{metric}' computer...")
