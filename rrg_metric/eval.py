@@ -53,14 +53,14 @@ def compute(metric, preds, gts, verbose=False):
         computer = F1CheXbert()
 
         if verbose: print(f"Computing '{metric}' scores...")
-        hyps = [computer.get_label(pred) for pred in preds]
-        refs = [computer.get_label(gt) for gt in gts]
+        # hyps = [computer.get_label(pred) for pred in preds]
+        # refs = [computer.get_label(gt) for gt in gts]
 
         # per_sample_results = [f1_score([ref], [hyp], average='micro') for ref, hyp in iters]
         # total_results = np.mean(per_sample_results)
 
         per_sample_results = None
-        total_results = computer(hyps=hyps, refs=refs)
+        total_results = computer(hyps=preds, refs=gts)
 
     else:
         raise ValueError(f"Invalid metric: {metric}")
