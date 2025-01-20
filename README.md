@@ -45,26 +45,42 @@ Here's a simple example of how to use the package:
 ```python
 import rrg_metric
 
-# Example predictions and ground truths
-predictions = [
-    "no acute cardiopulmonary abnormality",
-    "et tube terminates 2 cm above the carina retraction by several centimeters is recommended"
-]
-ground_truths = [
-    "no acute cardiopulmonary abnormality",
-    "endotracheal tube terminates 2 5 cm above the carina"
-]
+# Example usage
+predictions = ["Normal chest x-ray", "Bilateral pleural effusions noted"]
+ground_truth = ["Normal chest radiograph", "Small bilateral pleural effusions present"]
 
-# Compute metrics
-bleu_result = rrg_metric.compute("bleu", preds=predictions, gts=ground_truths)
-rouge_result = rrg_metric.compute("rouge", preds=predictions, gts=ground_truths)
-bertscore_result = rrg_metric.compute("bertscore", preds=predictions, gts=ground_truths)
-f1radgraph_result = rrg_metric.compute("f1radgraph", preds=predictions, gts=ground_truths)
-f1chexbert_result = rrg_metric.compute("f1chexbert", preds=predictions, gts=ground_truths)
+# Compute BLEU score
+results = rrg_metric.compute(
+    metric="bleu",
+    preds=predictions,
+    gts=ground_truth,
+    per_sample=True,
+    verbose=True
+)
 
-# Access results
-print(f"BLEU Score: {bleu_result['total_results']}")
+print(f"Total BLEU score: {results['total_results']}")
+if results['per_sample_results']:
+    print(f"Per-sample scores: {results['per_sample_results']}")
 ```
+
+## Parameters
+### `compute(metric, preds, gts, per_sample=False, verbose=False)`
+#### Required Parameters:
+- `metric` (str): The evaluation metric to use. Must be one of: ["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "f1chexbert"]
+- `preds` (List[str]): List of model predictions/generated texts
+- `gts` (List[str]): List of ground truth/reference texts
+
+#### Optional Parameters:
+- `per_sample` (bool, default=False): If True, returns scores for each individual prediction-reference pair
+- `verbose` (bool, default=False): If True, displays progress bars and loading messages
+
+#### Returns:
+Dictionary containing:
+
+- `total_results`: Overall score for the metric
+- `per_sample_results`: Individual scores if per_sample=True (None otherwise)
+- Additional results for specific metrics (e.g., parsed graphs for f1radgraph)
+
 
 ## Available Metrics
 
