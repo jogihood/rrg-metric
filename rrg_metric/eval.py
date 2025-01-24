@@ -26,7 +26,7 @@ def compute(metric, preds, gts, per_sample=False, verbose=False):
     additional_results = {}
     assert len(preds) == len(gts), "Number of predictions and ground truths should be the same"
     iters = tqdm((zip(preds, gts)), total=len(preds)) if verbose else zip(preds, gts)
-    log = iters.set_description
+    log = iters.set_description if verbose else None
     # TODO: Modify progress bar
 
     if metric in ["bleu", "rouge", "meteor", "bertscore"]:
