@@ -133,6 +133,7 @@ dependencies:
       - safetensors==0.5.2
       - scikit-learn==1.6.0
       - scipy==1.15.0
+      - seaborn==0.13.2
       - shellingham==1.5.4
       - six==1.17.0
       - smart-open==7.1.0

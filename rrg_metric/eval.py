@@ -1,6 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import os
+from typing import List, Dict, Union, Tuple, Any, Optional
 
 from sklearn.metrics import f1_score
 
@@ -15,14 +16,51 @@ from .config import (
     RADGRAPH_REWARD_LEVEL,
 )
 
-# parser = argparse.ArgumentParser(description='Evaluate the model')
-# parser.add_argument('--input', '-i', type=str, required=True, help='Input file')
-# parser.add_argument('--output', '-o', type=str, required=True, help='Output file')
-# parser.add_argument('--metric', '-m' type=str, default='bleu', help='Evaluation metric')
-# args = parser.parse_args()
+def compute(
+    metric: str,
+    preds: List[str],
+    gts: List[str],
+    per_sample: bool = False,
+    verbose: bool = False
+) -> Dict[str, Any]:
+    """
+    Compute evaluation metrics for radiology report generation.
 
+    This function supports multiple evaluation metrics including BLEU, ROUGE, METEOR,
+    BERTScore, F1RadGraph, and F1CheXbert. It can compute both aggregate and per-sample
+    scores depending on the parameters.
 
-def compute(metric, preds, gts, per_sample=False, verbose=False):
+    Args:
+        metric (str): The evaluation metric to use. Must be one of:
+            ["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "f1chexbert"]
+        preds (List[str]): List of model predictions/generated texts
+        gts (List[str]): List of ground truth/reference texts
+        per_sample (bool, optional): If True, returns scores for each individual 
+            prediction-reference pair. Defaults to False.
+        verbose (bool, optional): If True, displays progress bars and loading 
+            messages. Defaults to False.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing evaluation results:
+            - total_results: Overall score for the metric
+            - per_sample_results: Individual scores if per_sample=True (None otherwise)
+            - Additional metric-specific results (e.g., parsed graphs for f1radgraph)
+
+    Raises:
+        ValueError: If the specified metric is not supported or if the number of 
+            predictions and ground truths don't match.
+        AssertionError: If the lengths of preds and gts lists don't match.
+    
+    Examples:
+        >>> preds = ["Normal chest x-ray", "Bilateral pleural effusions noted"]
+        >>> gts = ["Normal chest radiograph", "Bilateral effusions present"]
+        >>> result = compute("bleu", preds=preds, gts=gts)
+        >>> print(f"BLEU score: {result['total_results']}")
+
+        >>> # Compute per-sample scores
+        >>> result = compute("bertscore", preds=preds, gts=gts, per_sample=True)
+        >>> print(f"Individual BERTScores: {result['per_sample_results']}")
+    """
     additional_results = {}
     assert len(preds) == len(gts), "Number of predictions and ground truths should be the same"
     iters = tqdm((zip(preds, gts)), total=len(preds)) if verbose else zip(preds, gts)
