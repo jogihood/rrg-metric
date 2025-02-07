@@ -68,7 +68,7 @@ if results['per_sample_results']:
 
 ### Visualization
 
-The package also provides visualization tools for correlation analysis between metric scores and radiologist error counts:
+The package provides visualization tools for correlation analysis between metric scores and radiologist error counts:
 
 For preprocessing tools related to radiology error validation (ReXVal), please check: https://github.com/jogihood/rexval-preprocessor
 
@@ -80,17 +80,15 @@ import matplotlib.pyplot as plt
 metric_scores = [0.8, 0.7, 0.9, 0.6, 0.85]
 error_counts = [1, 2, 0, 3, 1]
 
-# Create correlation plot with custom parameters
-fig, tau_ci = rrg_metric.plot_corr(
-    metric="BLEU",
-    metric_scores=metric_scores,
-    radiologist_error_counts=error_counts,
-    error_type="total",          # or "significant"
-    color='blue',                # custom color
-    width=8,                     # figure width in inches
-    height=6,                    # figure height in inches
-    scatter_alpha=0.6,           # scatter point transparency
-    show_tau=True               # show Kendall's tau in title
+# Create correlation plot
+ax, tau_ci = rrg_metric.plot_corr(
+   metric="BLEU",
+   metric_scores=metric_scores,
+   radiologist_error_counts=error_counts,
+   error_type="total",          # or "significant"
+   color='blue',                # custom color
+   scatter_alpha=0.6,           # scatter point transparency
+   show_tau=True               # show Kendall's tau in title
 )
 
 print(f"95% CI for Kendall's tau: ({tau_ci[0]:.3f}, {tau_ci[1]:.3f})")
@@ -109,7 +107,7 @@ plt.show()
 - `per_sample` (bool, default=False): If True, returns scores for each individual prediction-reference pair
 - `verbose` (bool, default=False): If True, displays progress bars and loading messages
 
-### `plot_corr(metric, metric_scores, radiologist_error_counts, error_type="total", **params)`
+### `plot_corr(metric, metric_scores, radiologist_error_counts, error_type="total", ax=None, **params)`
 #### Required Parameters:
 - `metric` (str): Name of the metric being visualized
 - `metric_scores` (List[float]): List of metric scores
@@ -117,6 +115,7 @@ plt.show()
 
 #### Optional Parameters:
 - `error_type` (str, default="total"): Type of error to plot. Must be either "total" or "significant"
+- `ax` (matplotlib.axes.Axes, default=None): Matplotlib axes for plotting. If None, creates new figure and axes
 - Additional parameters for plot customization (see docstring for details)
 
 ## Available Metrics
