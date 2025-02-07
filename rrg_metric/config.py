@@ -1,4 +1,3 @@
-RADGRAPH_REWARD_LEVEL = "complete"
 AVAILABLE_METRICS = [
     "bleu",
     "rouge",

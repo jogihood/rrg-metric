@@ -1,7 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import os
-from typing import List, Dict, Union, Tuple, Any, Optional
+from typing import List, Dict, Union, Tuple, Any, Optional, Literal
 
 from sklearn.metrics import f1_score
 
@@ -12,16 +12,14 @@ from huggingface_hub import hf_hub_download
 
 from appdirs import user_cache_dir
 
-from .config import (
-    RADGRAPH_REWARD_LEVEL,
-)
-
 def compute(
-    metric: str,
+    metric: Literal["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "f1chexbert"],
     preds: List[str],
     gts: List[str],
     per_sample: bool = False,
-    verbose: bool = False
+    verbose: bool = False,
+    f1radgraph_model_type: Optional[Literal["radgraph", "radgraph-xl", "echograph"]] = "radgraph-xl",
+    f1radgraph_reward_level: Optional[Literal["simple", "partial", "complete", "all"]] = "all",
 ) -> Dict[str, Any]:
     """
     Compute evaluation metrics for radiology report generation.
@@ -31,14 +29,18 @@ def compute(
     scores depending on the parameters.
 
     Args:
-        metric (str): The evaluation metric to use. Must be one of:
-            ["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "f1chexbert"]
+        metric (str): Evaluation metric to compute. Must be one of "bleu", "rouge",
+            "meteor", "bertscore", "f1radgraph", or "f1chexbert".
         preds (List[str]): List of model predictions/generated texts
         gts (List[str]): List of ground truth/reference texts
         per_sample (bool, optional): If True, returns scores for each individual 
             prediction-reference pair. Defaults to False.
         verbose (bool, optional): If True, displays progress bars and loading 
             messages. Defaults to False.
+        f1radgraph_model_type (str, optional): Model type for F1RadGraph. Must be one of
+            "radgraph", "radgraph-xl", or "echograph". Defaults to "radgraph".
+        f1radgraph_reward_level (str, optional): Reward level for F1RadGraph. Must be one of
+            "simple", "partial", "complete", or "all". Defaults to "all".
 
     Returns:
         Dict[str, Any]: A dictionary containing evaluation results:
@@ -92,7 +94,8 @@ def compute(
 
     elif metric == "f1radgraph":
         if verbose: log(f"Loading '{metric}' computer...")
-        computer = F1RadGraph(reward_level=RADGRAPH_REWARD_LEVEL)
+        if verbose: log(f"Model type: {f1radgraph_model_type}, Reward level: {f1radgraph_reward_level}")
+        computer = F1RadGraph(model_type=f1radgraph_model_type, reward_level=f1radgraph_reward_level)
 
         if verbose: log(f"Computing '{metric}' scores... Progress bar not available for '{metric}'")
         total_results, per_sample_results, pred_graphs, gt_graphs = computer(hyps=preds, refs=gts)
