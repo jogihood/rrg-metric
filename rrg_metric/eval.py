@@ -19,7 +19,7 @@ def compute(
     per_sample: bool = False,
     verbose: bool = False,
     f1radgraph_model_type: Optional[Literal["radgraph", "radgraph-xl", "echograph"]] = "radgraph-xl",
-    f1radgraph_reward_level: Optional[Literal["simple", "partial", "complete", "all"]] = "all",
+    f1radgraph_reward_level: Optional[Literal["simple", "partial", "complete", "all"]] = "complete",
 ) -> Dict[str, Any]:
     """
     Compute evaluation metrics for radiology report generation.
