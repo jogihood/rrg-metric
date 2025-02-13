@@ -106,6 +106,7 @@ plt.show()
 #### Optional Parameters:
 - `per_sample` (bool, default=False): If True, returns scores for each individual prediction-reference pair
 - `verbose` (bool, default=False): If True, displays progress bars and loading messages
+- `f1radgraph_model_type` / `f1radgraph_reward_level`: Parameters for RadGraph. Recommend default values
 
 ### `plot_corr(metric, metric_scores, radiologist_error_counts, error_type="total", ax=None, **params)`
 #### Required Parameters:
