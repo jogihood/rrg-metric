@@ -63,41 +63,65 @@ def compute(
         >>> result = compute("bertscore", preds=preds, gts=gts, per_sample=True)
         >>> print(f"Individual BERTScores: {result['per_sample_results']}")
     """
+    per_sample_results = None
     additional_results = {}
     assert len(preds) == len(gts), "Number of predictions and ground truths should be the same"
-    iters = tqdm((zip(preds, gts)), total=len(preds)) if verbose else zip(preds, gts)
-    log = iters.set_description if verbose else None
-    # TODO: Modify progress bar
 
-    if metric in ["bleu", "rouge", "meteor", "bertscore"]:
-        if verbose: log(f"Loading '{metric}' computer...")
+    iters = zip(preds, gts)
+    log = lambda: None
+    if verbose:
+        if metric in ["f1radgraph", "f1chexbert"]:
+            iters = zip(preds, gts)
+            log = print
+            print(f"Progress bar not available for '{metric}'.")
+        else:
+            iters = tqdm(iters, total=len(preds))
+            log = iters.set_description
+
+    if per_sample and metric == "f1chexbert":
+        print("Per-sample scores not supported for F1CheXbert. Setting per_sample=False.")
+        per_sample = False
+
+    if metric in ["bleu", "rouge", "meteor"]:
+        log(f"Loading '{metric}' computer...")
         computer = load(metric)
 
-        if verbose: log(f"Computing '{metric}' scores...")
-        k = metric
-        if metric == "rouge": k = "rougeL"
-        if metric == "bertscore": k = "f1"
+        key = "rougeL" if metric == "rouge" else metric
 
-        params = {} if metric != "bertscore" else {"lang": "en"}
+        log(f"Computing '{metric}' scores...")
         if per_sample:
             per_sample_results = []
             for pred, gt in iters:
-                params["predictions"] = [pred]
-                params["references"]  = [gt]
-                per_sample_results.append(computer.compute(**params)[k])
+                per_sample_result = computer.compute(
+                    predictions=[pred],
+                    references=[gt],
+                )[key]
+                per_sample_results.append(per_sample_result)
                 total_results = np.mean(per_sample_results)
         else:
-            params["predictions"] = preds
-            params["references"]  = gts
-            per_sample_results = None
-            total_results = computer.compute(**params)[k]
+            total_results = computer.compute(
+                predictions=preds,
+                references=gts,
+            )[key]
+
+    elif metric == "bertscore":
+        log(f"Loading '{metric}' computer...")
+        computer = load(metric)
+
+        log(f"Computing '{metric}' scores...")
+        per_sample_results = computer.compute(
+            predictions=preds,
+            references=gts,
+            lang="en",
+        )["f1"]
+        total_results = np.mean(per_sample_results)
 
     elif metric == "f1radgraph":
-        if verbose: log(f"Loading '{metric}' computer...")
-        if verbose: log(f"Model type: {f1radgraph_model_type}, Reward level: {f1radgraph_reward_level}")
+        log(f"Loading '{metric}' computer...")
+        log(f"Model type: {f1radgraph_model_type}, Reward level: {f1radgraph_reward_level}")
         computer = F1RadGraph(model_type=f1radgraph_model_type, reward_level=f1radgraph_reward_level)
 
-        if verbose: log(f"Computing '{metric}' scores... Progress bar not available for '{metric}'")
+        log(f"Computing '{metric}' scores...")
         total_results, per_sample_results, pred_graphs, gt_graphs = computer(hyps=preds, refs=gts)
         additional_results = {
             "pred_graphs": pred_graphs,
@@ -105,7 +129,7 @@ def compute(
         }
 
     elif metric == "f1chexbert":
-        if verbose: log(f"Loading '{metric}' computer...")
+        log(f"Loading '{metric}' computer...")
         
         chexbert_cache_dir = user_cache_dir("chexbert")
         os.makedirs(chexbert_cache_dir, exist_ok=True)
@@ -113,7 +137,7 @@ def compute(
 
         # TODO: modifiable cache_dir
         if not os.path.exists(chexbert_checkpoint):
-            if verbose: log(f"'{metric}' model not found. Downloading...")
+            log(f"'{metric}' model not found. Downloading...")
             chexbert_checkpoint_cache = hf_hub_download(
                 repo_id='StanfordAIMI/RRG_scorers',
                 cache_dir=chexbert_cache_dir,
@@ -123,15 +147,24 @@ def compute(
 
         computer = F1CheXbert()
 
-        if verbose: log(f"Computing '{metric}' scores...")
+        log(f"Computing '{metric}' scores...")
         # hyps = [computer.get_label(pred) for pred in preds]
         # refs = [computer.get_label(gt) for gt in gts]
 
         # per_sample_results = [f1_score([ref], [hyp], average='micro') for ref, hyp in iters]
         # total_results = np.mean(per_sample_results)
 
-        per_sample_results = None
-        total_results = computer(hyps=preds, refs=gts)
+        accuracy, accuracy_not_averaged, class_report, class_report_5 = computer(hyps=preds, refs=gts)
+
+        total_results = class_report_5['micro avg']['f1-score'],
+        additional_results = {
+            "accuracy"              : accuracy,
+            "accuracy_not_averaged" : accuracy_not_averaged,
+            "micro_f1_14"           : class_report['micro avg']['f1-score'],
+            "micro_f1_5"            : class_report_5['micro avg']['f1-score'],
+            "macro_f1_14"           : class_report['macro avg']['f1-score'],
+            "macro_f1_5"            : class_report_5['macro avg']['f1-score'],
+        }
 
     else:
         raise ValueError(f"Invalid metric: {metric}")
