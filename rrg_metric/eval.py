@@ -156,7 +156,7 @@ def compute(
 
         accuracy, accuracy_not_averaged, class_report, class_report_5 = computer(hyps=preds, refs=gts)
 
-        total_results = class_report_5['micro avg']['f1-score'],
+        total_results = class_report_5['micro avg']['f1-score']
         additional_results = {
             "accuracy"              : accuracy,
             "accuracy_not_averaged" : accuracy_not_averaged,
