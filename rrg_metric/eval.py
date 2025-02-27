@@ -6,7 +6,7 @@ from typing import List, Dict, Union, Tuple, Any, Optional, Literal
 from sklearn.metrics import f1_score
 
 from evaluate import load
-from radgraph import F1RadGraph
+from .radgraph_gpu import F1RadGraph
 from f1chexbert import F1CheXbert
 from huggingface_hub import hf_hub_download
 
