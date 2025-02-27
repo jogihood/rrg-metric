@@ -18,6 +18,7 @@ BLEU, ROUGE, METEOR, BERTScore, F1RadGraph, and F1CheXbert.
 - Visualization tools for correlation analysis
 
 ## TODO
+- Add CLI usage
 - Add SembScore (CheXbert Vector Similarity)
 
 ## Installation
