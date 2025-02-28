@@ -11,7 +11,7 @@ def plot_corr(
     error_type: str = "total",
     ax: Optional[plt.Axes] = None,
     **params: Dict[str, Any]
-) -> Tuple[plt.Axes, Tuple[float, float]]:
+) -> Tuple[plt.Axes, float, Tuple[float, float]]:
     """
     Create a correlation plot between metric scores and radiologist error counts.
     
@@ -33,7 +33,7 @@ def plot_corr(
             - show_tau (bool): Whether to show Kendall's tau (default: True)
     
     Returns:
-        Tuple[plt.Axes, Tuple[float, float]]: The matplotlib axes and the 95% confidence interval of tau
+        Tuple[plt.Axes, float, Tuple[float, float]]: The matplotlib axes, tau, and the 95% confidence interval of tau
     
     Raises:
         ValueError: If error_type is not "total" or "significant"
@@ -102,4 +102,4 @@ def plot_corr(
     if ax.figure.get_axes()[0] == ax:
         plt.tight_layout()
     
-    return ax, (ci_lower, ci_upper)
+    return ax, tau, (ci_lower, ci_upper)

@@ -1,5 +1,5 @@
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import os
 from typing import List, Dict, Union, Tuple, Any, Optional, Literal
 
