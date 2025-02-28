@@ -82,7 +82,7 @@ metric_scores = [0.8, 0.7, 0.9, 0.6, 0.85]
 error_counts = [1, 2, 0, 3, 1]
 
 # Create correlation plot
-ax, tau_ci = rrg_metric.plot_corr(
+ax, tau, tau_ci = rrg_metric.plot_corr(
    metric="BLEU",
    metric_scores=metric_scores,
    radiologist_error_counts=error_counts,
@@ -92,7 +92,8 @@ ax, tau_ci = rrg_metric.plot_corr(
    show_tau=True               # show Kendall's tau in title
 )
 
-print(f"95% CI for Kendall's tau: ({tau_ci[0]:.3f}, {tau_ci[1]:.3f})")
+print(f"Kendall's tau: {tau:.3f}")
+print(f"95% CI: [{tau_ci[0]:.3f}, {tau_ci[1]:.3f}]")
 plt.show()
 ```
 
