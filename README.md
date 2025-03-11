@@ -67,7 +67,7 @@ if results['per_sample_results']:
     print(f"Per-sample scores: {results['per_sample_results']}")
 ```
 
-### Visualization
+### Visualization (Beta)
 
 The package provides visualization tools for correlation analysis between metric scores and radiologist error counts:
 
