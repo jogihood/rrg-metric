@@ -155,9 +155,17 @@ def compute(
         additional_results = {
             "f1chexbert_accuracy"              : accuracy,
             "f1chexbert_accuracy_not_averaged" : accuracy_not_averaged,
+            "f1chexbert_micro_precision_14"    : class_report['micro avg']['precision'],
+            "f1chexbert_micro_recall_14"       : class_report['micro avg']['recall'],
             "f1chexbert_micro_f1_14"           : class_report['micro avg']['f1-score'],
+            "f1chexbert_micro_precision_5"     : class_report_5['micro avg']['precision'],
+            "f1chexbert_micro_recall_5"        : class_report_5['micro avg']['recall'],
             "f1chexbert_micro_f1_5"            : class_report_5['micro avg']['f1-score'],
+            "f1chexbert_macro_precision_14"    : class_report['macro avg']['precision'],
+            "f1chexbert_macro_recall_14"       : class_report['macro avg']['recall'],
             "f1chexbert_macro_f1_14"           : class_report['macro avg']['f1-score'],
+            "f1chexbert_macro_precision_5"     : class_report_5['macro avg']['precision'],
+            "f1chexbert_macro_recall_5"        : class_report_5['macro avg']['recall'],
             "f1chexbert_macro_f1_5"            : class_report_5['macro avg']['f1-score'],
         }
 
