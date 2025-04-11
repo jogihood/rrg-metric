@@ -6,31 +6,31 @@ from typing import List, Dict, Union, Tuple, Any, Optional, Literal
 from sklearn.metrics import f1_score
 
 from evaluate import load
-from .radgraph_gpu import F1RadGraph
-from f1chexbert import F1CheXbert
 from huggingface_hub import hf_hub_download
 
-from appdirs import user_cache_dir
+from .radgraph_gpu import F1RadGraph
+from .chexbert import CheXbert
 
 def compute(
-    metric: Literal["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "f1chexbert"],
+    metric: Literal["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "chexbert"],
     preds: List[str],
     gts: List[str],
     per_sample: bool = False,
     verbose: bool = False,
     f1radgraph_model_type: Optional[Literal["radgraph", "radgraph-xl", "echograph"]] = "radgraph-xl",
     f1radgraph_reward_level: Optional[Literal["simple", "partial", "complete", "all"]] = "complete",
+    cache_dir = None,
 ) -> Dict[str, Any]:
     """
     Compute evaluation metrics for radiology report generation.
 
     This function supports multiple evaluation metrics including BLEU, ROUGE, METEOR,
-    BERTScore, F1RadGraph, and F1CheXbert. It can compute both aggregate and per-sample
+    BERTScore, F1RadGraph, and CheXbert scores (F1 CheXbert, SembScore). It can compute both aggregate and per-sample
     scores depending on the parameters.
 
     Args:
         metric (str): Evaluation metric to compute. Must be one of "bleu", "rouge",
-            "meteor", "bertscore", "f1radgraph", or "f1chexbert".
+            "meteor", "bertscore", "f1radgraph", or "chexbert".
         preds (List[str]): List of model predictions/generated texts
         gts (List[str]): List of ground truth/reference texts
         per_sample (bool, optional): If True, returns scores for each individual 
@@ -41,6 +41,7 @@ def compute(
             "radgraph", "radgraph-xl", or "echograph". Defaults to "radgraph".
         f1radgraph_reward_level (str, optional): Reward level for F1RadGraph. Must be one of
             "simple", "partial", "complete", or "all". Defaults to "all".
+        cache_dir (optional): Cache directory for huggingface model downloads.
 
     Returns:
         Dict[str, Any]: A dictionary containing evaluation results:
@@ -70,7 +71,7 @@ def compute(
     iters = zip(preds, gts)
     log = lambda: None
     if verbose:
-        if metric in ["f1radgraph", "f1chexbert"]:
+        if metric in ["f1radgraph", "chexbert"]:
             iters = zip(preds, gts)
             log = print
             print(f"Progress bar not available for '{metric}'.")
@@ -128,24 +129,11 @@ def compute(
             "gt_graphs": gt_graphs
         }
 
-    elif metric == "f1chexbert":
+    elif metric == "chexbert":
+        # Will always return both scores: F1 CheXbert and SembScore.
         log(f"Loading '{metric}' computer...")
         
-        chexbert_cache_dir = user_cache_dir("chexbert")
-        os.makedirs(chexbert_cache_dir, exist_ok=True)
-        chexbert_checkpoint = os.path.join(chexbert_cache_dir, "chexbert.pth")
-
-        # TODO: modifiable cache_dir
-        if not os.path.exists(chexbert_checkpoint):
-            log(f"'{metric}' model not found. Downloading...")
-            chexbert_checkpoint_cache = hf_hub_download(
-                repo_id='StanfordAIMI/RRG_scorers',
-                cache_dir=chexbert_cache_dir,
-                filename="chexbert.pth"
-            )
-            os.symlink(chexbert_checkpoint_cache, chexbert_checkpoint)
-
-        computer = F1CheXbert()
+        computer = CheXbert(cache_dir=cache_dir)
 
         log(f"Computing '{metric}' scores...")
         # hyps = [computer.get_label(pred) for pred in preds]
@@ -154,20 +142,29 @@ def compute(
         # per_sample_results = [f1_score([ref], [hyp], average='micro') for ref, hyp in iters]
         # total_results = np.mean(per_sample_results)
 
-        accuracy, accuracy_not_averaged, class_report, class_report_5 = computer(hyps=preds, refs=gts)
+        accuracy, accuracy_not_averaged, class_report, class_report_5, sembscores = computer(hyps=preds, refs=gts)
 
-        total_results = class_report_5['micro avg']['f1-score']
+        total_results = {
+            "f1chexbert" : class_report_5['micro avg']['f1-score'],
+            "sembscore"  : np.mean(sembscores)
+        }
+        per_sample_results = {
+            "f1chexbert" : None,
+            "sembscore"  : sembscores
+        }
         additional_results = {
-            "accuracy"              : accuracy,
-            "accuracy_not_averaged" : accuracy_not_averaged,
-            "micro_f1_14"           : class_report['micro avg']['f1-score'],
-            "micro_f1_5"            : class_report_5['micro avg']['f1-score'],
-            "macro_f1_14"           : class_report['macro avg']['f1-score'],
-            "macro_f1_5"            : class_report_5['macro avg']['f1-score'],
+            "f1chexbert_accuracy"              : accuracy,
+            "f1chexbert_accuracy_not_averaged" : accuracy_not_averaged,
+            "f1chexbert_micro_f1_14"           : class_report['micro avg']['f1-score'],
+            "f1chexbert_micro_f1_5"            : class_report_5['micro avg']['f1-score'],
+            "f1chexbert_macro_f1_14"           : class_report['macro avg']['f1-score'],
+            "f1chexbert_macro_f1_5"            : class_report_5['macro avg']['f1-score'],
         }
 
     else:
         raise ValueError(f"Invalid metric: {metric}")
+
+    log("Done.")
 
     return {
         "total_results": total_results,
