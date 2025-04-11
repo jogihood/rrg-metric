@@ -1,17 +1,18 @@
 # rrg-metric
 
 A Python package for evaluating Radiology Report Generation (RRG) using multiple metrics including:\
-BLEU, ROUGE, METEOR, BERTScore, F1RadGraph, and F1CheXbert.
+BLEU, ROUGE, METEOR, BERTScore, F1RadGraph, F1CheXbert, and SembScore.
 
 ## Features
 
 - Multiple evaluation metrics supported:
-  - BLEU (Bilingual Evaluation Understudy)
-  - ROUGE (Recall-Oriented Understudy for Gisting Evaluation)
-  - METEOR (Metric for Evaluation of Translation with Explicit ORdering)
+  - BLEU
+  - ROUGE
+  - METEOR
   - BERTScore
-  - F1 RadGraph (Specialized for radiology report graphs)
-  - F1 CheXbert (Specialized for chest X-ray reports)
+  - F1 RadGraph
+  - F1 CheXbert
+  - SembScore (CheXbert vector similarity)
 - Easy-to-use API
 - Support for batch processing
 - Detailed per-sample and aggregated results
@@ -19,7 +20,7 @@ BLEU, ROUGE, METEOR, BERTScore, F1RadGraph, and F1CheXbert.
 
 ## TODO
 - Add CLI usage
-- Add SembScore (CheXbert Vector Similarity)
+- Add RaTEScore
 
 ## Installation
 
@@ -109,6 +110,7 @@ plt.show()
 - `per_sample` (bool, default=False): If True, returns scores for each individual prediction-reference pair
 - `verbose` (bool, default=False): If True, displays progress bars and loading messages
 - `f1radgraph_model_type` / `f1radgraph_reward_level`: Parameters for RadGraph. Recommend default values
+- `cache_dir`: `cache_dir` for huggingface model downloads
 
 ### `plot_corr(metric, metric_scores, radiologist_error_counts, error_type="total", ax=None, **params)`
 #### Required Parameters:
@@ -121,34 +123,9 @@ plt.show()
 - `ax` (matplotlib.axes.Axes, default=None): Matplotlib axes for plotting. If None, creates new figure and axes
 - Additional parameters for plot customization (see docstring for details)
 
-## Available Metrics
-
-The package supports the following metrics:
-
-1. `bleu`: Basic BLEU score computation
-2. `rouge`: ROUGE-L score for evaluating summary quality
-3. `meteor`: METEOR score for machine translation evaluation
-4. `bertscore`: Contextual embedding-based evaluation using BERT
-5. `f1radgraph`: Specialized metric for evaluating radiology report graphs
-6. `f1chexbert`: Specialized metric for chest X-ray report evaluation
-
-You can check available metrics using:
-```python
-print(rrg_metric.AVAILABLE_METRICS)
-```
-
 ## Requirements
-
 - Python 3.10+
-- PyTorch
-- Transformers
-- Evaluate
-- RadGraph
-- F1CheXbert
-- Matplotlib
-- Seaborn
 - Other dependencies listed in `requirements.txt`
 
 ## Contributing
-
 This repository is still under active development. If you encounter any issues or bugs, I would really appreciate if you could submit a Pull Request. Your contributions will help make this package more robust and useful for the community!
