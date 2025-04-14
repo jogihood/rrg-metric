@@ -4,5 +4,6 @@ AVAILABLE_METRICS = [
     "meteor",
     "bertscore",
     "f1radgraph",
-    "f1chexbert",
+    "chexbert",
+    "ratescore",
 ]
