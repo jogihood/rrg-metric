@@ -13,6 +13,7 @@ BLEU, ROUGE, METEOR, BERTScore, F1RadGraph, F1CheXbert, and SembScore.
   - F1 RadGraph
   - F1 CheXbert
   - SembScore (CheXbert vector similarity)
+  - [RaTEScore](https://github.com/MAGIC-AI4Med/RaTEScore) (Entity-aware metric)
 - Easy-to-use API
 - Support for batch processing
 - Detailed per-sample and aggregated results
@@ -20,7 +21,7 @@ BLEU, ROUGE, METEOR, BERTScore, F1RadGraph, F1CheXbert, and SembScore.
 
 ## TODO
 - Add CLI usage
-- Add RaTEScore
+- Add [GREEN](https://github.com/Stanford-AIMI/GREEN) score
 
 ## Installation
 
@@ -102,7 +103,7 @@ plt.show()
 
 ### `compute(metric, preds, gts, per_sample=False, verbose=False)`
 #### Required Parameters:
-- `metric` (str): The evaluation metric to use. Must be one of: ["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "f1chexbert"]
+- `metric` (str): The evaluation metric to use. Must be one of: ["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "chexbert", "ratescore"]
 - `preds` (List[str]): List of model predictions/generated texts
 - `gts` (List[str]): List of ground truth/reference texts
 
