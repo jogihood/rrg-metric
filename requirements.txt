@@ -1,5 +1,3 @@
-ipykernel
-IProgress
 radgraph
 f1chexbert
 evaluate
@@ -7,3 +5,5 @@ absl-py
 rouge_score
 bert_score
 seaborn
+RaTEScore
+medspacy

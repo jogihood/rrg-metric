@@ -2,17 +2,10 @@ import numpy as np
 from tqdm.auto import tqdm
 import os
 from typing import List, Dict, Union, Tuple, Any, Optional, Literal
-
 from sklearn.metrics import f1_score
 
-from evaluate import load
-from huggingface_hub import hf_hub_download
-
-from .radgraph_gpu import F1RadGraph
-from .chexbert import CheXbert
-
 def compute(
-    metric: Literal["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "chexbert"],
+    metric: Literal["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "chexbert", "ratescore"],
     preds: List[str],
     gts: List[str],
     per_sample: bool = False,
@@ -30,7 +23,7 @@ def compute(
 
     Args:
         metric (str): Evaluation metric to compute. Must be one of "bleu", "rouge",
-            "meteor", "bertscore", "f1radgraph", or "chexbert".
+            "meteor", "bertscore", "f1radgraph", "chexbert", or "ratescore".
         preds (List[str]): List of model predictions/generated texts
         gts (List[str]): List of ground truth/reference texts
         per_sample (bool, optional): If True, returns scores for each individual 
@@ -71,7 +64,7 @@ def compute(
     iters = zip(preds, gts)
     log = lambda: None
     if verbose:
-        if metric in ["f1radgraph", "chexbert"]:
+        if metric in ["f1radgraph", "chexbert", "ratescore"]:
             iters = zip(preds, gts)
             log = print
             print(f"Progress bar not available for '{metric}'.")
@@ -79,11 +72,9 @@ def compute(
             iters = tqdm(iters, total=len(preds))
             log = iters.set_description
 
-    if per_sample and metric == "f1chexbert":
-        print("Per-sample scores not supported for F1CheXbert. Setting per_sample=False.")
-        per_sample = False
-
     if metric in ["bleu", "rouge", "meteor"]:
+        from evaluate import load
+        
         log(f"Loading '{metric}' computer...")
         computer = load(metric)
 
@@ -106,6 +97,8 @@ def compute(
             )[key]
 
     elif metric == "bertscore":
+        from evaluate import load
+        
         log(f"Loading '{metric}' computer...")
         computer = load(metric)
 
@@ -118,6 +111,8 @@ def compute(
         total_results = np.mean(per_sample_results)
 
     elif metric == "f1radgraph":
+        from .radgraph_gpu import F1RadGraph
+        
         log(f"Loading '{metric}' computer...")
         log(f"Model type: {f1radgraph_model_type}, Reward level: {f1radgraph_reward_level}")
         computer = F1RadGraph(model_type=f1radgraph_model_type, reward_level=f1radgraph_reward_level)
@@ -130,18 +125,13 @@ def compute(
         }
 
     elif metric == "chexbert":
+        from .chexbert import CheXbert
+        
         # Will always return both scores: F1 CheXbert and SembScore.
         log(f"Loading '{metric}' computer...")
-        
         computer = CheXbert(cache_dir=cache_dir)
 
         log(f"Computing '{metric}' scores...")
-        # hyps = [computer.get_label(pred) for pred in preds]
-        # refs = [computer.get_label(gt) for gt in gts]
-
-        # per_sample_results = [f1_score([ref], [hyp], average='micro') for ref, hyp in iters]
-        # total_results = np.mean(per_sample_results)
-
         accuracy, accuracy_not_averaged, class_report, class_report_5, sembscores = computer(hyps=preds, refs=gts)
 
         total_results = {
@@ -169,6 +159,16 @@ def compute(
             "f1chexbert_macro_f1_5"            : class_report_5['macro avg']['f1-score'],
         }
 
+    elif metric == "ratescore":
+        from RaTEScore import RaTEScore
+        log(f"Loading '{metric}' computer...")
+        computer = RaTEScore()
+
+        log(f"Computing '{metric}' scores...")
+        per_sample_results = computer.compute_score(preds, gts)
+
+        total_results = np.mean(per_sample_results)        
+
     else:
         raise ValueError(f"Invalid metric: {metric}")
 
@@ -179,18 +179,3 @@ def compute(
         "per_sample_results": per_sample_results,
         **additional_results
     }
-
-
-# if __name__ == '__main__':
-#     COMPUTERS = {
-#         "BLEU":         "load('bleu')",
-#         "ROUGE":        "load('rouge')",
-#         "METEOR":       "load('meteor')",
-#         "BERTScore":    "load('bertscore')",
-#         "F1RadGraph":   "F1RadGraph(reward_level=RADGRAPH_REWARD_LEVEL)",
-#         "F1CheXbert":   "F1CheXbert()",
-#     }
-#     computer = None
-
-#     if args.metric not in COMPUTERS:
-#         raise ValueError(f"Invalid metric: {args.metric}")
