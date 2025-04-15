@@ -70,8 +70,8 @@ class RadGraph(RadGraphCpu):
         self.batch_size = batch_size
 
         if model_type is None:
-            print("model_type not provided, defaulting to radgraph-xl")
-            model_type = "radgraph-xl"
+            print("model_type not provided, defaulting to 'radgraph'")
+            model_type = "radgraph"
 
         self.model_type = model_type.lower()
 
