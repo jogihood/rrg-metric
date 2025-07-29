@@ -14,6 +14,7 @@ BLEU, ROUGE, METEOR, BERTScore, F1RadGraph, F1CheXbert, and SembScore.
   - F1 CheXbert
   - SembScore (CheXbert vector similarity)
   - [RaTEScore](https://github.com/MAGIC-AI4Med/RaTEScore) (Entity-aware metric)
+  - [GREEN](https://github.com/Stanford-AIMI/GREEN) (LLM-based metric)
 - Easy-to-use API
 - Support for batch processing
 - Detailed per-sample and aggregated results
@@ -21,7 +22,6 @@ BLEU, ROUGE, METEOR, BERTScore, F1RadGraph, F1CheXbert, and SembScore.
 
 ## TODO
 - Add CLI usage
-- Add [GREEN](https://github.com/Stanford-AIMI/GREEN) score
 
 ## Installation
 
@@ -31,13 +31,7 @@ git clone https://github.com/jogihood/rrg-metric.git
 cd rrg-metric
 ```
 
-2. Create and activate a conda environment using the provided `environment.yml`:
-```bash
-conda env create -f environment.yml
-conda activate rrg-metric
-```
-
-Alternatively, you can install the required packages using pip:
+2. Install the required packages using pip:
 ```bash
 pip install -r requirements.txt
 ```
@@ -69,7 +63,7 @@ if results['per_sample_results']:
     print(f"Per-sample scores: {results['per_sample_results']}")
 ```
 
-### Visualization
+### Visualization (alpha)
 
 The package provides visualization tools for correlation analysis between metric scores and radiologist error counts:
 

@@ -7,3 +7,7 @@ bert_score
 seaborn
 RaTEScore
 medspacy
+sentence-transformers
+accelerate
+sentencepiece
+protobuf

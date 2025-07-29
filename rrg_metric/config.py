@@ -6,4 +6,5 @@ AVAILABLE_METRICS = [
     "f1radgraph",
     "chexbert",
     "ratescore",
+    "green",
 ]

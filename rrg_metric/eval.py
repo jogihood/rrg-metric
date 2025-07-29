@@ -3,14 +3,15 @@ from tqdm.auto import tqdm
 import os
 from typing import List, Dict, Union, Tuple, Any, Optional, Literal
 from sklearn.metrics import f1_score
+import time
 
 def compute(
-    metric: Literal["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "chexbert", "ratescore"],
+    metric: Literal["bleu", "rouge", "meteor", "bertscore", "f1radgraph", "chexbert", "ratescore", "green"],
     preds: List[str],
     gts: List[str],
     per_sample: bool = False,
     verbose: bool = False,
-    f1radgraph_model_type: Optional[Literal["radgraph", "radgraph-xl", "echograph"]] = "radgraph-xl",
+    f1radgraph_model_type: Optional[Literal["radgraph", "radgraph-xl", "echograph"]] = "radgraph",
     f1radgraph_reward_level: Optional[Literal["simple", "partial", "complete", "all"]] = "complete",
     cache_dir = None,
 ) -> Dict[str, Any]:
@@ -23,7 +24,7 @@ def compute(
 
     Args:
         metric (str): Evaluation metric to compute. Must be one of "bleu", "rouge",
-            "meteor", "bertscore", "f1radgraph", "chexbert", or "ratescore".
+            "meteor", "bertscore", "f1radgraph", "chexbert", "ratescore", or "green".
         preds (List[str]): List of model predictions/generated texts
         gts (List[str]): List of ground truth/reference texts
         per_sample (bool, optional): If True, returns scores for each individual 
@@ -63,8 +64,9 @@ def compute(
 
     iters = zip(preds, gts)
     log = lambda: None
+    total_time = 0
     if verbose:
-        if metric in ["f1radgraph", "chexbert", "ratescore"]:
+        if metric in ["f1radgraph", "chexbert", "ratescore", "green"]:
             iters = zip(preds, gts)
             log = print
             print(f"Progress bar not available for '{metric}'.")
@@ -81,6 +83,7 @@ def compute(
         key = "rougeL" if metric == "rouge" else metric
 
         log(f"Computing '{metric}' scores...")
+        start_time = time.time()
         if per_sample:
             per_sample_results = []
             for pred, gt in iters:
@@ -90,11 +93,15 @@ def compute(
                 )[key]
                 per_sample_results.append(per_sample_result)
                 total_results = np.mean(per_sample_results)
+            end_time = time.time()
+            total_time = end_time - start_time
         else:
             total_results = computer.compute(
                 predictions=preds,
                 references=gts,
             )[key]
+        end_time = time.time()
+        total_time = end_time - start_time
 
     elif metric == "bertscore":
         from evaluate import load
@@ -103,12 +110,15 @@ def compute(
         computer = load(metric)
 
         log(f"Computing '{metric}' scores...")
+        start_time = time.time()
         per_sample_results = computer.compute(
             predictions=preds,
             references=gts,
             lang="en",
         )["f1"]
         total_results = np.mean(per_sample_results)
+        end_time = time.time()
+        total_time = end_time - start_time
 
     elif metric == "f1radgraph":
         from .radgraph_gpu import F1RadGraph
@@ -118,7 +128,10 @@ def compute(
         computer = F1RadGraph(model_type=f1radgraph_model_type, reward_level=f1radgraph_reward_level)
 
         log(f"Computing '{metric}' scores...")
+        start_time = time.time()
         total_results, per_sample_results, pred_graphs, gt_graphs = computer(hyps=preds, refs=gts)
+        end_time = time.time()
+        total_time = end_time - start_time
         additional_results = {
             "pred_graphs": pred_graphs,
             "gt_graphs": gt_graphs
@@ -132,7 +145,10 @@ def compute(
         computer = CheXbert(cache_dir=cache_dir)
 
         log(f"Computing '{metric}' scores...")
+        start_time = time.time()
         accuracy, accuracy_not_averaged, class_report, class_report_5, sembscores = computer(hyps=preds, refs=gts)
+        end_time = time.time()
+        total_time = end_time - start_time
 
         total_results = {
             "f1chexbert" : class_report_5['micro avg']['f1-score'],
@@ -165,9 +181,30 @@ def compute(
         computer = RaTEScore()
 
         log(f"Computing '{metric}' scores...")
+        start_time = time.time()
         per_sample_results = computer.compute_score(preds, gts)
+        end_time = time.time()
+        total_time = end_time - start_time
+        total_results = np.mean(per_sample_results)
 
-        total_results = np.mean(per_sample_results)        
+    elif metric == "green":
+        from .green_score import GREEN
+        log(f"Loading '{metric}' computer...")
+        green_model_name = "StanfordAIMI/GREEN-radllama2-7b"
+        computer = GREEN(model_name=green_model_name, cache_dir=cache_dir, output_dir='.')
+
+        log(f"Computing '{metric}' scores...")
+        start_time = time.time()
+        mean, std, green_score_list, summary, result_df = computer(refs=gts, hyps=preds)        
+        end_time = time.time()
+        total_time = end_time - start_time
+        total_results = mean
+        per_sample_results = green_score_list
+        additional_results = {
+            "green_std": std,
+            "green_summary": summary,
+            "green_result_df": result_df,
+        }
 
     else:
         raise ValueError(f"Invalid metric: {metric}")
@@ -177,5 +214,6 @@ def compute(
     return {
         "total_results": total_results,
         "per_sample_results": per_sample_results,
+        "total_time": total_time,
         **additional_results
     }
