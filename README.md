@@ -20,6 +20,21 @@ BLEU, ROUGE, METEOR, BERTScore, F1RadGraph, F1CheXbert, and SembScore.
 - Detailed per-sample and aggregated results
 - Visualization tools for correlation analysis
 
+## Metric Details
+
+### F1 CheXbert
+
+Following the methodology from [Delbrouck et al., 2022](https://aclanthology.org/2022.findings-emnlp.319/), the F1 CheXbert score is calculated by converting the four label types into a binary classification system. The labels are mapped as follows:
+
+* `Positive` and `Uncertain` labels are mapped to **1**.
+* `Negative` and `Not mentioned` labels are mapped to **0**.
+
+The primary metric is the F1 score calculated for five key findings: atelectasis, cardiomegaly, consolidation, edema, and pleural effusion. Results for all 14 labels are also available in the additional keys in the return value of the `rrg_metric.eval` function.
+
+### F1 RadGraph
+
+We deviate from the default model (`'radgraph-xl'`) in the original RadGraph library ([v0.1.17](https://pypi.org/project/radgraph/0.1.17/)) and instead use the `'radgraph'` model as our default. This change is based on findings that the `-xl` version shows a weaker correlation with radiologist assessments for chest X-ray reports.
+
 ## TODO
 - Add CLI usage
 
